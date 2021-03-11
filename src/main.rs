@@ -2,8 +2,9 @@ pub mod app;
 
 use app::App;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let mut app = App::new();
 
-    println!("{:?}", app.run());
+    println!("{:?}", app.run().await);
 }
