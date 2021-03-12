@@ -1,4 +1,3 @@
-use walkdir::DirEntry;
 use warp::Filter;
 
 use crate::app::FileIndex;
@@ -18,12 +17,16 @@ pub fn files(
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     let files = move || {
         let file_index = file_index.lock().unwrap();
-        let filtered: Vec<&DirEntry> = file_index
-            .iter()
-            .filter(|d| d.file_name().to_str().unwrap().ends_with(".rs"))
-            .collect();
-        format!("{:?}", filtered)
+        serde_json::to_string(
+            &file_index
+                .iter()
+                .map(|fe| &fe.path)
+                .collect::<Vec<&std::path::PathBuf>>(),
+        )
+        .unwrap()
     };
 
-    warp::path!("files").map(files)
+    warp::path!("files")
+        .map(files)
+        .map(|reply| warp::reply::with_header(reply, "content-type", "application/json"))
 }
