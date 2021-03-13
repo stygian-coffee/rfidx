@@ -1,10 +1,11 @@
+use std::collections::HashSet;
 use std::convert::TryFrom;
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use walkdir::{DirEntry, WalkDir};
 
-#[derive(Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct FileEntry {
     pub path: PathBuf,
 }
@@ -29,24 +30,27 @@ impl TryFrom<DirEntry> for FileEntry {
 
 pub struct FileIndex {
     root: PathBuf,
-    entries: Vec<FileEntry>,
+    entries: HashSet<FileEntry>,
 }
 
 impl FileIndex {
     pub fn from_path<T: AsRef<Path>>(root: T) -> std::io::Result<Self> {
         log::info!("Indexing files...");
 
-        let mut entries = vec![];
+        let mut entries = HashSet::new();
         let walkdir = WalkDir::new(&root);
         for f in walkdir.into_iter() {
             if let Ok(file_entry) = FileEntry::try_from(f?) {
-                entries.push(file_entry);
+                entries.insert(file_entry);
             }
         }
 
         log::info!("Indexed {} files.", entries.len());
 
-        Ok(Self { root: PathBuf::from(root.as_ref()), entries })
+        Ok(Self {
+            root: PathBuf::from(root.as_ref()),
+            entries,
+        })
     }
 
     pub fn root(&self) -> &PathBuf {
@@ -54,14 +58,14 @@ impl FileIndex {
     }
 }
 
-impl AsRef<Vec<FileEntry>> for FileIndex {
-    fn as_ref(&self) -> &Vec<FileEntry> {
+impl AsRef<HashSet<FileEntry>> for FileIndex {
+    fn as_ref(&self) -> &HashSet<FileEntry> {
         &self.entries
     }
 }
 
-impl AsMut<Vec<FileEntry>> for FileIndex {
-    fn as_mut(&mut self) -> &mut Vec<FileEntry> {
+impl AsMut<HashSet<FileEntry>> for FileIndex {
+    fn as_mut(&mut self) -> &mut HashSet<FileEntry> {
         &mut self.entries
     }
 }

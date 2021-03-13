@@ -36,7 +36,7 @@ pub fn update_from_event(file_index: Arc<Mutex<FileIndex>>, event: DebouncedEven
             };
             if metadata.is_file() {
                 let mut file_index = file_index.lock().unwrap();
-                file_index.as_mut().push(FileEntry { path });
+                file_index.as_mut().insert(FileEntry { path });
             }
         }
         DebouncedEvent::Remove(path) => {
