@@ -54,6 +54,8 @@ impl App {
     }
 
     fn generate_index(&mut self) -> std::io::Result<()> {
+        log::info!("Indexing files...");
+
         let mut file_index = self.file_index.lock().unwrap();
         let walkdir = WalkDir::new(".");
         for f in walkdir.into_iter() {
@@ -61,6 +63,8 @@ impl App {
                 file_index.push(file_entry);
             }
         }
+
+        log::info!("Indexed {} files.", file_index.len());
 
         Ok(())
     }
