@@ -1,5 +1,6 @@
 pub mod api;
 pub mod app;
+pub mod file_index;
 pub mod notify;
 
 use app::App;
@@ -10,7 +11,7 @@ async fn main() {
         .filter_or("RUST_LOG", "info");
     env_logger::init_from_env(env);
 
-    let mut app = App::new();
+    let mut app = App::new().unwrap();
 
     println!("{:?}", app.run().await);
 }
