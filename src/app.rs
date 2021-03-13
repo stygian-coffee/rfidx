@@ -1,5 +1,7 @@
 use std::sync::{Arc, Mutex};
 
+use anyhow::Result;
+
 use crate::api;
 use crate::file_index::FileIndex;
 use crate::notify;
@@ -9,7 +11,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new() -> std::io::Result<Self> {
+    pub fn new() -> Result<Self> {
         Ok(Self {
             file_index: Arc::new(Mutex::new(FileIndex::from_path(".")?)),
         })

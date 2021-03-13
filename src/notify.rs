@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
 
-use crate::file_index::{FileEntry, FileIndex};
+use crate::file_index::FileIndex;
 
 pub async fn listen_and_update(file_index: Arc<Mutex<FileIndex>>) {
     let (tx, rx) = mpsc::channel();
@@ -36,14 +36,14 @@ pub fn update_from_event(file_index: Arc<Mutex<FileIndex>>, event: DebouncedEven
             };
             if metadata.is_file() {
                 let mut file_index = file_index.lock().unwrap();
-                file_index.as_mut().insert(FileEntry { path });
+                file_index.insert(path);
             }
         }
         DebouncedEvent::Remove(path) => {
             log::info!("Remove event: {:?}", &path);
 
             let mut file_index = file_index.lock().unwrap();
-            file_index.as_mut().retain(|f| f.path != path);
+            file_index.remove(path);
         }
         _ => {}
     }

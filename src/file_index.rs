@@ -1,29 +1,20 @@
 use std::collections::HashSet;
-use std::convert::TryFrom;
 use std::path::{Path, PathBuf};
 
+use anyhow::Result;
+use path_absolutize::Absolutize;
 use serde::{Deserialize, Serialize};
-use walkdir::{DirEntry, WalkDir};
+use walkdir::WalkDir;
 
 #[derive(PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct FileEntry {
     pub path: PathBuf,
 }
 
-pub enum FromDirEntryError {
-    NotAFile,
-}
-
-impl TryFrom<DirEntry> for FileEntry {
-    type Error = FromDirEntryError;
-
-    fn try_from(entry: DirEntry) -> Result<Self, Self::Error> {
-        if !entry.file_type().is_file() {
-            Err(FromDirEntryError::NotAFile)
-        } else {
-            Ok(Self {
-                path: entry.into_path(),
-            })
+impl FileEntry {
+    pub fn new<T: AsRef<Path>>(path: T) -> Self {
+        Self {
+            path: path.as_ref().into(),
         }
     }
 }
@@ -33,28 +24,73 @@ pub struct FileIndex {
     entries: HashSet<FileEntry>,
 }
 
+fn canonical_relative_path_priv<T, U>(root: T, path: U) -> Result<PathBuf>
+where
+    T: AsRef<Path>,
+    U: AsRef<Path>,
+{
+    Ok(path
+        .as_ref()
+        .absolutize()?
+        .into_owned()
+        .strip_prefix(root)?
+        .into())
+}
+
 impl FileIndex {
-    pub fn from_path<T: AsRef<Path>>(root: T) -> std::io::Result<Self> {
+    pub fn from_path<T: AsRef<Path>>(root: T) -> Result<Self> {
+        let root = PathBuf::from(root.as_ref().absolutize().unwrap().into_owned());
+
         log::info!("Indexing files...");
 
         let mut entries = HashSet::new();
         let walkdir = WalkDir::new(&root);
         for f in walkdir.into_iter() {
-            if let Ok(file_entry) = FileEntry::try_from(f?) {
-                entries.insert(file_entry);
+            let f = f?;
+            if !f.file_type().is_file() {
+                continue;
             }
+            entries.insert(FileEntry {
+                path: canonical_relative_path_priv(&root, f.into_path())?,
+            });
         }
 
         log::info!("Indexed {} files.", entries.len());
 
-        Ok(Self {
-            root: PathBuf::from(root.as_ref()),
-            entries,
-        })
+        Ok(Self { root, entries })
     }
 
     pub fn root(&self) -> &PathBuf {
         &self.root
+    }
+
+    fn canonical_relative_path<T: AsRef<Path>>(&self, path: T) -> Result<PathBuf> {
+        canonical_relative_path_priv(&self.root, path)
+    }
+
+    /// Insert a file path, putting the path in a canonical form relative to the root beforehand
+    pub fn insert<T: AsRef<Path>>(&mut self, path: T) {
+        self.entries
+            .insert(FileEntry::new(match self.canonical_relative_path(path) {
+                Ok(p) => p,
+                Err(e) => {
+                    log::error!("{:?}", self.root);
+                    log::error!("{}", e);
+                    return;
+                }
+            }));
+    }
+
+    /// Remove a file path, putting the path in a canonical form relative to the root beforehand
+    pub fn remove<T: AsRef<Path>>(&mut self, path: T) {
+        self.entries
+            .remove(&FileEntry::new(match self.canonical_relative_path(path) {
+                Ok(p) => p,
+                Err(e) => {
+                    log::error!("{}", e);
+                    return;
+                }
+            }));
     }
 }
 
