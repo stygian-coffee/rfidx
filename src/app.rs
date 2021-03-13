@@ -2,10 +2,11 @@ use std::convert::TryFrom;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use walkdir::{DirEntry, WalkDir};
 
 use crate::api;
+use crate::notify;
 
 #[derive(Serialize, Deserialize)]
 pub struct FileEntry {
@@ -24,7 +25,7 @@ impl TryFrom<DirEntry> for FileEntry {
             Err(FromDirEntryError::NotAFile)
         } else {
             Ok(Self {
-                path: entry.into_path()
+                path: entry.into_path(),
             })
         }
     }
@@ -45,6 +46,8 @@ impl App {
 
     pub async fn run(&mut self) -> std::io::Result<()> {
         self.generate_index()?;
+
+        tokio::spawn(notify::listen_and_update(self.file_index.clone()));
 
         warp::serve(api::all_routes(self.file_index.clone()))
             .run(([127, 0, 0, 1], 8000))
