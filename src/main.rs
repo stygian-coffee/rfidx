@@ -11,7 +11,13 @@ async fn main() {
         .filter_or("RUST_LOG", "info");
     env_logger::init_from_env(env);
 
-    let mut app = App::new().unwrap();
+    let mut app = match App::new() {
+        Ok(a) => a,
+        Err(e) => {
+            log::error!("Unable to start app: {}", e);
+            return;
+        }
+    };
 
-    println!("{:?}", app.run().await);
+    app.run().await;
 }

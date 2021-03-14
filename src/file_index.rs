@@ -39,7 +39,7 @@ where
 
 impl FileIndex {
     pub fn from_path<T: AsRef<Path>>(root: T) -> Result<Self> {
-        let root = PathBuf::from(root.as_ref().absolutize().unwrap().into_owned());
+        let root = PathBuf::from(root.as_ref().absolutize()?.into_owned());
 
         log::info!("Indexing files...");
 
@@ -74,7 +74,7 @@ impl FileIndex {
             .insert(FileEntry::new(match self.canonical_relative_path(path) {
                 Ok(p) => p,
                 Err(e) => {
-                    log::error!("{:?}", self.root);
+                    log::error!("{}", self.root.display());
                     log::error!("{}", e);
                     return;
                 }
