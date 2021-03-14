@@ -1,7 +1,7 @@
-pub mod api;
-pub mod app;
-pub mod file_index;
-pub mod notify;
+mod api;
+mod app;
+mod file_index;
+mod notify;
 
 use app::App;
 
