@@ -1,5 +1,5 @@
 [package]
-name = "rusty_indexer"
+name = "rfidx"
 version = "0.1.0"
 authors = ["Alexander Krigsman <alkrigsman@gmail.com>"]
 license = "MIT OR Apache-2.0"

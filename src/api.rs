@@ -14,7 +14,7 @@ pub fn all_routes(
 }
 
 pub fn version() -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-    warp::path::end().map(|| "rusty_indexer v0.1.0\n")
+    warp::path::end().map(|| "rfidx v0.1.0\n")
 }
 
 /// GET /files
