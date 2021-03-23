@@ -59,7 +59,7 @@ pub fn files_glob(
     warp::path!("files" / "glob")
         .and(warp::query::<HashMap<String, String>>())
         .map(
-            move |mut params: HashMap<String, String>| match params.remove("p") {
+            move |mut params: HashMap<String, String>| match params.remove("q") {
                 Some(pat) => files(pat),
                 None => "error no pattern".to_string(),
             },
