@@ -20,7 +20,7 @@ impl App {
 
     pub async fn run(&mut self) {
         tokio::spawn(
-            warp::serve(api::all_routes(self.file_index.clone())).run(([127, 0, 0, 1], 8000)),
+            warp::serve(api::all_filters(self.file_index.clone())).run(([127, 0, 0, 1], 8000)),
         );
 
         //TODO put this in a loop and check if it's repeatedly failing,
