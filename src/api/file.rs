@@ -1,6 +1,7 @@
 use std::convert::Infallible;
 use std::sync::{Arc, Mutex};
 
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use warp::{Filter, Rejection};
 use warp::http::StatusCode;
@@ -59,9 +60,10 @@ async fn files_glob_handler(
         Ok(p) => p,
         Err(e) => return Err(warp::reject::custom(e.with_status(StatusCode::BAD_REQUEST))),
     };
+
     let files = file_index
         .as_ref()
-        .iter()
+        .par_iter()
         .map(|fe| &fe.path)
         .filter(|s| pattern_compiled.matches(&s.as_path().to_str().unwrap()))
         .collect::<Vec<&std::path::PathBuf>>();
