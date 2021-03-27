@@ -26,7 +26,15 @@ pub fn version() -> impl Filter<Extract = impl warp::Reply, Error = warp::Reject
 }
 
 pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
-    if let Some(api_err) = err.find::<Error>() {
+    if err.is_not_found() {
+        Ok(warp::reply::with_status(
+            warp::reply::json(&Error::new(
+                StatusCode::NOT_FOUND,
+                "Not found",
+            )),
+            StatusCode::NOT_FOUND
+        ))
+    } else if let Some(api_err) = err.find::<Error>() {
         Ok(warp::reply::with_status(
             warp::reply::json(api_err),
             api_err.status_code(),
