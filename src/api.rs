@@ -22,7 +22,7 @@ pub fn all_filters(
 
 /// GET /
 pub fn version() -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-    warp::path::end().map(|| "rfidx v0.1.0\n")
+    warp::path::end().map(|| warp::reply::json(&"rfidx v0.1.0\n"))
 }
 
 pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
