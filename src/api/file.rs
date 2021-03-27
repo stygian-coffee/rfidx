@@ -3,8 +3,10 @@ use std::sync::{Arc, Mutex};
 
 use serde::{Deserialize, Serialize};
 use warp::{Filter, Rejection};
+use warp::http::StatusCode;
 
 use crate::file_index::FileIndex;
+use super::error::WithStatus;
 
 /// GET /files
 pub fn files(
@@ -14,15 +16,6 @@ pub fn files(
         .and(warp::get())
         .and(with_file_index(file_index))
         .and_then(files_handler)
-}
-
-#[derive(Debug)]
-struct PatternError;
-impl warp::reject::Reject for PatternError {}
-impl From<glob::PatternError> for PatternError {
-    fn from(_err: glob::PatternError) -> Self {
-        Self {}
-    }
 }
 
 /// GET /files/glob?q=*.rs
@@ -64,7 +57,7 @@ async fn files_glob_handler(
     let file_index = file_index.lock().unwrap();
     let pattern_compiled = match glob::Pattern::new(&query.q) {
         Ok(p) => p,
-        Err(e) => return Err(warp::reject::custom(PatternError::from(e))),
+        Err(e) => return Err(warp::reject::custom(e.with_status(StatusCode::BAD_REQUEST))),
     };
     let files = file_index
         .as_ref()
