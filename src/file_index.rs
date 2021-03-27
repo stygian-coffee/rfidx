@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+use std::time;
 
 use anyhow::Result;
 use path_absolutize::Absolutize;
@@ -43,6 +44,8 @@ impl FileIndex {
 
         log::info!("Indexing files...");
 
+        let start_time = time::Instant::now();
+
         let mut entries = HashSet::new();
         let walkdir = WalkDir::new(&root);
         for f in walkdir.into_iter() {
@@ -55,7 +58,13 @@ impl FileIndex {
             });
         }
 
-        log::info!("Indexed {} files.", entries.len());
+        let end_time = time::Instant::now();
+
+        log::info!(
+            "Indexed {} files in {:?}.",
+            entries.len(),
+            end_time.duration_since(start_time)
+        );
 
         Ok(Self { root, entries })
     }
