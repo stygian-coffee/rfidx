@@ -18,6 +18,7 @@ pub fn all_filters(
         .or(file::files(file_index.clone()))
         .or(file::files_glob(file_index.clone()))
         .recover(handle_rejection)
+        .with(warp::log("info"))
 }
 
 /// GET /
