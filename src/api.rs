@@ -36,6 +36,14 @@ pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> 
             )),
             StatusCode::NOT_FOUND
         ))
+    } else if let Some(_) = err.find::<warp::reject::InvalidQuery>() {
+        Ok(warp::reply::with_status(
+            warp::reply::json(&Error::new(
+                StatusCode::BAD_REQUEST,
+                "Invalid query",
+            )),
+            StatusCode::BAD_REQUEST
+        ))
     } else if let Some(api_err) = err.find::<Error>() {
         Ok(warp::reply::with_status(
             warp::reply::json(api_err),
