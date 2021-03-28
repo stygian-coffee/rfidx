@@ -1,3 +1,6 @@
+File indexing utility. Motivation: Vim's `:find` command can be really slow for
+large codebases, even without `:set path+=$PWD/**`.
+
 ## License
 
 Licensed under either of
